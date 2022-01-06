@@ -27,22 +27,24 @@ import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static downloader.Configuration.*;
-
 @Component
 public class ImageDownloader implements CommandLineRunner {
     private static Connection CONN;
 
-    public static void imageDownload() {
-        ImageDownloader imageDownloader = new ImageDownloader();
+    private final Constants constants;
 
+    public ImageDownloader(Constants constants) {
+        this.constants = constants;
+    }
+
+    private void imageDownload() {
         try {
             trustAllCertificates();
             System.out.println("==== 앨범 다운로드 ====");
-            imageDownloader.getPageDetail(imageDownloader.getPageList(PageType.ALBUM), PageType.ALBUM);
+            getPageDetail(getPageList(PageType.ALBUM), PageType.ALBUM);
 
             System.out.println("==== 알람장 다운로드 ====");
-            imageDownloader.getPageDetail(imageDownloader.getPageList(PageType.REPORT), PageType.REPORT);
+            getPageDetail(getPageList(PageType.REPORT), PageType.REPORT);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -50,13 +52,13 @@ public class ImageDownloader implements CommandLineRunner {
 
     private Connection getConnection(String url) {
         return CONN = Jsoup.connect(url)
-                .cookie("csrftoken", csrftoken)
-                .cookie("sessionid", sessionid);
+                .cookie("csrftoken", constants.getCsrftoken())
+                .cookie("sessionid", constants.getSessionid());
     }
 
 
     private List<String> getPageList(PageType pageType) throws Exception {
-        String url = DOMAIN + pageType.getPageUrl();
+        String url = constants.getDomain() + pageType.getPageUrl();
         return addListByElement(pageType.getPageSize(), url, pageType.getListWrapper() + " > a");
     }
 
@@ -77,7 +79,7 @@ public class ImageDownloader implements CommandLineRunner {
 
     private void getPageDetail(List<String> pageList, PageType pageType) throws Exception {
         for(String url : pageList) {
-            Connection connection = getConnection(DOMAIN + url);
+            Connection connection = getConnection(constants.getDomain() + url);
             Document html = connection.get();
             String title = getTitle(html, pageType);
 
@@ -96,11 +98,11 @@ public class ImageDownloader implements CommandLineRunner {
             int month = date.get(Calendar.MONTH) + 1;
 
             System.out.println(year + "/" + month + " Download....");
-            if(TARGET_YEAR > 0 && year > TARGET_YEAR) {
+            if(constants.getTargetYear() > 0 && year > constants.getTargetYear()) {
                 continue;
             }
 
-            if(TARGET_MONTH > 0 && month > TARGET_MONTH) {
+            if(constants.getTargetMonth() > 0 && month > constants.getTargetMonth()) {
                 continue;
             }
 
@@ -131,13 +133,16 @@ public class ImageDownloader implements CommandLineRunner {
 
                 String targetFileName = StringUtil.join(fileNameValues, "_") + "." + fileExtention;
 
-                fileDownload(imageLink, SAVE_TARGET_DIRECTORY + "/" + pageType.getFolderName() + "/" + year, targetFileName);
+                fileDownload(imageLink, constants.getSaveTargetDirectory() + "/" + pageType.getFolderName() + "/" + year, targetFileName);
             }
         }
     }
 
     private String getTitle(Document html, PageType pageType) throws Exception {
-        String title = html.select(".sub-header-title").html();
+        String titleClass = ".sub-header-title";
+        html.select(titleClass + " > div.tooltip").remove();
+
+        String title = html.select(titleClass).text();
         if(pageType.equals(PageType.REPORT)) {
             return parseDateFormat(title, "EEE, MMMM d, yyyy");
         }
@@ -148,29 +153,21 @@ public class ImageDownloader implements CommandLineRunner {
     }
 
     private void createFolder(String folderName) throws Exception {
-        Path path = Paths.get(SAVE_TARGET_DIRECTORY + folderName);
+        Path path = Paths.get(constants.getSaveTargetDirectory() + "/" + folderName);
         Files.createDirectories(path);
     }
 
-    private static void trustAllCertificates() throws NoSuchAlgorithmException, KeyManagementException
-    {
-        TrustManager[] trustManagers = new TrustManager[]{new X509TrustManager()
-        {
-            public X509Certificate[] getAcceptedIssuers()
-            {
-                return new X509Certificate[0];
-            }
+    private static void trustAllCertificates() throws NoSuchAlgorithmException, KeyManagementException {
+        TrustManager[] trustManagers = new TrustManager[] {
+                new X509TrustManager() {
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return new X509Certificate[0];
+                    }
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {}
 
-            public void checkClientTrusted(
-                    X509Certificate[] certs, String authType)
-            {
-            }
-
-            public void checkServerTrusted(
-                    X509Certificate[] certs, String authType)
-            {
-            }
-        }};
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {}
+                }
+        };
 
         SSLContext sslContext = SSLContext.getInstance("SSL");
         sslContext.init(null, trustManagers, new SecureRandom());

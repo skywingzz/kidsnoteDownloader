@@ -1,14 +1,10 @@
-domain: https://www.kidsnote.com
-
-#파일을 저장할 Local 경로
-saveTargetDirectory: /Users/skywing/kissnote
-
-#다운로드할 날짜(년/월/일), 0설정시 전체
-targetDate:
-  year: 2021
-  month: 1
-  day: 0
-
-authInformation:
-  csrftoken:
-  sessionid:
+constants:
+  domain: https://www.kidsnote.com
+  saveTargetDirectory: /Users/skywing/kidsnote #파일을 저장할 Local 경로
+  targetDate: #다운로드할 날짜(년/월/일), 0설정시 전체 (month:12 설정시 1월~12월 download)
+    year: 2021
+    month: 12
+    day: 0
+  authInformation:
+    csrftoken:
+    sessionid:
