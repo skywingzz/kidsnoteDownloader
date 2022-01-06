@@ -1,0 +1,14 @@
+domain: https://www.kidsnote.com
+
+#파일을 저장할 Local 경로
+saveTargetDirectory: /Users/skywing/kissnote
+
+#다운로드할 날짜(년/월/일), 0설정시 전체
+targetDate:
+  year: 2021
+  month: 1
+  day: 0
+
+authInformation:
+  csrftoken:
+  sessionid:
