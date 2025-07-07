@@ -29,7 +29,6 @@ import java.util.*;
 
 @Component
 public class ImageDownloader implements CommandLineRunner {
-    private static Connection CONN;
 
     private final Constants constants;
 
@@ -51,7 +50,7 @@ public class ImageDownloader implements CommandLineRunner {
     }
 
     private Connection getConnection(String url) {
-        return CONN = Jsoup.connect(url)
+        return Jsoup.connect(url)
                 .cookie("csrftoken", constants.getCsrftoken())
                 .cookie("sessionid", constants.getSessionid());
     }
