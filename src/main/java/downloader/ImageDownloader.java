@@ -56,7 +56,6 @@ public class ImageDownloader implements CommandLineRunner {
                 .cookie("sessionid", constants.getSessionid());
     }
 
-
     private List<String> getPageList(PageType pageType) throws Exception {
         String url = constants.getDomain() + pageType.getPageUrl();
         return addListByElement(pageType.getPageSize(), url, pageType.getListWrapper() + " > a");
